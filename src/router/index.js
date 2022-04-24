@@ -1,13 +1,17 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import Home from '@/views/Home.vue'
-import sourceData from '@/data.json'
+import { createRouter, createWebHistory } from 'vue-router';
+import Home from '@/views/Home.vue';
+import sourceData from '@/data.json';
 
 const routes = [
-  { path: '/', name: 'Home', component: Home },
+  { path: '/', name: 'Home', component: Home, alias: '/home' },
+  // { path: '/home', redirect: '/' },
   {
     path: '/protected',
     name: 'protected',
-    component: () => import('@/views/Protected.vue'),
+    component: {
+      default: () => import('@/views/Protected.vue'),
+      LeftSidebar: () => import('@/components/LeftSidebar.vue'),
+    },
     meta: {
       requiresAuth: true,
     },
@@ -20,10 +24,19 @@ const routes = [
   {
     path: '/invoices',
     name: 'invoices',
-    component: () => import('@/views/Invoices.vue'),
+    component: {
+      default: () => import('@/views/Invoices.vue'),
+      LeftSidebar: () => import('@/components/LeftSidebar.vue'),
+    },
     meta: {
       requiresAuth: true,
     },
+  },
+  { path: '/:orderId(\\d+)', name: 'orders' },
+  { path: '/:productName', name: 'product' },
+  {
+    path: '/example/:id(\\d+)*',
+    component: () => import('@/views/Login.vue'),
   },
   {
     path: '/destination/:id/:slug',
@@ -33,7 +46,7 @@ const routes = [
     beforeEnter(to, from) {
       const exists = sourceData.destinations.find(
         (destination) => destination.id === parseInt(to.params.id)
-      )
+      );
       if (!exists)
         return {
           name: 'NotFound',
@@ -41,7 +54,7 @@ const routes = [
           params: { pathMatch: to.path.split('/').slice(1) },
           query: to.query,
           hash: to.hash,
-        }
+        };
     },
     children: [
       {
@@ -57,7 +70,7 @@ const routes = [
     name: 'NotFound',
     component: () => import('@/views/NotFound.vue'),
   },
-]
+];
 
 const router = createRouter({
   history: createWebHistory(),
@@ -66,16 +79,16 @@ const router = createRouter({
     return (
       savedPosition ||
       new Promise((resolve) => {
-        setTimeout(() => resolve({ top: 0, behavior: 'smooth' }), 300)
+        setTimeout(() => resolve({ top: 0, behavior: 'smooth' }), 300);
       })
-    )
+    );
   },
-})
+});
 
 router.beforeEach((to, from) => {
   if (to.meta.requiresAuth && !window.user) {
-    return { name: 'login', query: { redirect: to.fullPath } }
+    return { name: 'login', query: { redirect: to.fullPath } };
   }
-})
+});
 
-export default router
+export default router;
